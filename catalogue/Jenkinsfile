@@ -1,0 +1,11 @@
+pipeline{
+	agent any
+
+	environment{
+	APP_NAME = "catalogue"
+	}
+	stages{
+	stage('testing')
+	{
+	sh 'echo"Hello"'
+	}}}

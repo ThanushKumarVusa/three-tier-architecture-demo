@@ -179,7 +179,9 @@ function mongoLoop() {
 }
 
 mongoLoop();
-
+app.get('/', (req, res) => {
+  res.send('Catalogue service is running!');
+});
 // fire it up!
 const port = process.env.CATALOGUE_SERVER_PORT || '8080';
 app.listen(port, () => {
