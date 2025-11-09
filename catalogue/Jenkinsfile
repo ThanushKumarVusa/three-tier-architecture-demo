@@ -1,30 +1,73 @@
-pipeline{
-        agent any
+pipeline {
+    agent any
 
-        environment{
-	    DOCKER_IMAGE_NAME = "catalogue"
-        APP_NAME = "catalogue"
-        }
-        stages{
-        stage('testing')
-        {
-        steps{
-        sh 'echo "Helo"'
-        }
-        }
-        stage ("checkout")
-        {
-        steps{
-        //since we integrated with webhook, I ignored it
-        sh 'echo "Success"'
-        }
-        }
-        stage ("Building Docker Image")
-        {
-        steps{
-	script{
-        docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}", "catalogue")
-        }
-	sh 'echo "success"'
+    environment {
+        DOCKER_IMAGE_NAME     = "catalogue"
+        APP_NAME              = "catalogue"
+        AWS_ACCOUNT_ID        = '816069158126'        // Replace with your AWS Account ID
+        AWS_REGION            = 'us-east-1'           // Replace with your AWS Region
+        ECR_REPOSITORY_NAME   = 'catalogue'           // Replace with your ECR repository name
+        IMAGE_NAME            = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}"
+    }
 
-        }}}}
+    stages {
+        stage('Testing') {
+            steps {
+                sh 'echo "Hello from Jenkins pipeline!"'
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                // Since GitHub webhook integration is set up, we skip manual checkout
+                sh 'echo "Webhook integration successful. Code checked out automatically."'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image from catalogue directory
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} catalogue"
+                    // Tag the image for ECR
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} ${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER} ${IMAGE_NAME}:latest"
+                }
+                sh 'echo "Docker image build complete!"'
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                script {
+                    withAWS(credentials: 'aws', region: "${AWS_REGION}") {
+                        sh """
+                            aws ecr get-login-password --region ${AWS_REGION} | \
+                            docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh "docker push ${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    sh "docker push ${IMAGE_NAME}:latest"
+                }
+                sh 'echo "Image pushed successfully to ECR!"'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline executed successfully — Image pushed to ECR!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs for details."
+        }
+    }
+}
+
