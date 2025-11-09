@@ -60,6 +60,18 @@ pipeline {
             }
         }
     }
+    stage('Deploy to EKS') {
+    steps {
+        script {
+            sh """
+                echo "Deploying ${IMAGE_NAME}:${env.BUILD_NUMBER} to EKS..."
+                aws eks update-kubeconfig --region ${AWS_REGION} --name demo-cluster-catalogue
+                kubectl set image deployment/catalogue catalogue=${IMAGE_NAME}:${env.BUILD_NUMBER} -n default
+                kubectl rollout status deployment/catalogue -n default
+            """
+        }
+    }
+}
 
     post {
         success {
