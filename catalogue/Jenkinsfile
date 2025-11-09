@@ -9,7 +9,7 @@ pipeline{
         stage('testing')
         {
         steps{
-        sh 'echo "Hellooo"'
+        sh 'echo "Helooo"'
         }
         }
         stage ("checkout")
