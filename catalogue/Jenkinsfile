@@ -1,12 +1,28 @@
 pipeline{
-	agent any
+        agent any
 
-	environment{
-	APP_NAME = "catalogue"
-	}
-	stages{
-	stage('testing')
-	{
-	steps{
-	sh 'echo "Hellooo"'
-	}}}}
+        environment{
+	    DOCKER_IMAGE_NAME = "catalogue"
+        APP_NAME = "catalogue"
+        }
+        stages{
+        stage('testing')
+        {
+        steps{
+        sh 'echo "Hellooo"'
+        }
+        }
+        stage ("checkout")
+        {
+        steps{
+        //since we integrated with webhook, I ignored it
+        sh 'echo "Success"'
+        }
+        }
+        stage ("Building Docker Image")
+        {
+        steps{
+        docker.build("${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}")
+        sh 'echo "success"'
+
+        }}}}
