@@ -60,7 +60,7 @@ pipeline {
             }
         }
     }
-    stage('Deploy to EKS') {
+    stage('deploy to EKS') {
     steps {
         script {
             sh """
